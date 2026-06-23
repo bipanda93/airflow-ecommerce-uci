@@ -47,21 +47,20 @@ services:
       AIRFLOW__WEBSERVER__WEB_SERVER_PORT: '8080'
       AIRFLOW__WEBSERVER__WORKERS: '1'
       AIRFLOW__WEBSERVER__WORKER_TIMEOUT: '300'
-      AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT: '300'
     ports:
       - "8183:8080"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./data:/opt/airflow/data
+      - ./tests:/opt/airflow/tests
     depends_on:
       postgres:
         condition: service_healthy
       airflow-init:
         condition: service_completed_successfully
     command: >
-      bash -c "pip install pymongo --quiet &&
-               sleep 15 &&
+      bash -c "pip install pymongo pytest --quiet && sleep 15 &&
                airflow webserver --port 8080 --workers 1 & airflow scheduler"
 
   jenkins:
@@ -73,6 +72,8 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./dags:/opt/airflow/dags
+      - ./tests:/opt/airflow/tests
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=false -Xmx256m -Xms128m"
 
